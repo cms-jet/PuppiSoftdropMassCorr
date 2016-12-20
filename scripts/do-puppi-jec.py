@@ -25,7 +25,8 @@ parser.add_option('--fitGen', action='store_true', dest='fitGenMass', default=Fa
 
 if options.noX: gROOT.SetBatch(True)
 
-prefix = '/mnt/t3nfs01/data01/shome/thaarres/EXOVVAnalysisRunII/AnalysisOutput/80X/'
+#prefix = '/mnt/t3nfs01/data01/shome/thaarres/EXOVVAnalysisRunII/AnalysisOutput/80X/'
+prefix = '/mnt/t3nfs01/data01/shome/dschafer/AnalysisOutput/80X/SignalMC/Summer16/'
 gStyle.SetOptFit(1)
 
 def get_line(xmin,xmax,ymin,ymax,style):
@@ -60,10 +61,18 @@ def get_palette(mode):
 palette = get_palette('gv')
 col = TColor()
 
-masses = [1000,1200,1400,1600,1800,2000,2500,3000,4000,4500]  
-masses = [600,800,1000,1200,1400,1800,2000,3000,4000,4500] #Ops!! 400 masspoint is named for convenience and is actually SM WW, not signal sample!
+#masses = [1000,1200,1400,1600,1800,2000,2500,3000,4000,4500]  
+#masses = [600,800,1000,1200,1400,1800,2000,2500,3000,3500,4000,4500] #Ops!! 400 masspoint is named for convenience and is actually SM WW, not signal sample!
+#masses = [600,1000,1200,1400,1800,2000,3000,3500,4000,4500]
+masses = [600,1000,1200,2000,2500,3000] # BulkWW
+masses = [600,1000,1200,2000,2500,3000,3500] # WprimeWZ
+masses = [600,1000,1200,1400,1800,2000,3000,3500,4000,4500] #ZprimeWW
 if options.fitGenMass:
   masses = [400,600,800,1000,1200,1400,1800,2500,3000,4000,4500]
+  masses = [600,1000,1200,1400,1800,2000,3000,3500,4000,4500]
+  masses = [600,1000,1200,2000,2500,3000]
+  masses = [600,1000,1200,1400,1800,2000,3000,3500,4000,4500]
+  #masses = [600,800,1800,2000,2500,3500,4500] #Wprime
   
 hCentral = 'gen_SoftdropMass_eta1v3'
 hForward = 'gen_SoftdropMass_etaUP1v3'
@@ -76,6 +85,7 @@ if options.doPruning:
   hCentral = 'massShift_pruning_eta1v3'
   hForward = 'massShift_pruning_etaUP1v3'
   options.doMassShiftFit = True
+  
 
 if options.fitGenMass:
   hCentral = 'GenAK8SoftdropMass_eta1v3'
@@ -91,8 +101,8 @@ lineStyle = [1,1,1,1,3,3,3,3]
 
 
 signals = ["BulkWW","BulkZZ","ZprimeWW","WprimeWZ"]
-signals = ["BulkWW"]
-
+signals = [ "ZprimeWW"]
+ptsCEN = []
 
 for signal in signals:
  
@@ -247,8 +257,10 @@ for signal in signals:
   for j in xrange(0,len(histosCEN)):
     histosCEN[j].Write() 
     histosFOR[j].Write()
-    histosCEN[j].Scale(1./histosCEN[j].Integral())
-    histosFOR[j].Scale(1./histosFOR[j].Integral())
+    if histosCEN[j].Integral()>0:
+        histosCEN[j].Scale(1./histosCEN[j].Integral())
+    if histosFOR[j].Integral()>0:
+        histosFOR[j].Scale(1./histosFOR[j].Integral())
     histosCEN[j].SetLineColor(col.GetColor(palette[j]))
     histosCEN[j].SetLineWidth(2)
     histosCEN[j].Rebin(1) 
@@ -259,7 +271,7 @@ for signal in signals:
     
   f.Close()  
 
-    
+      
   canv = getCanvas()
   canv.cd()
   yTitle = "Arbitrary scale"
@@ -267,7 +279,14 @@ for signal in signals:
   canv = getCanvas()
   canv.cd()
   setmax = histosCEN[0].GetMaximum()*2.0
-  vFrame = canv.DrawFrame(20.,0.000005,140.,setmax)  
+  fxmin = 20.
+  fxmax = 140.
+  fymin = 0.000005
+  fymax = setmax
+  if options.doMassShiftFit:
+      fxmin = -1.
+      fxmax =1.
+  vFrame = canv.DrawFrame(fxmin,fymin,fxmax,fymax)  
   vFrame.SetXTitle("PUPPI softdrop mass")
   vFrame.SetYTitle(yTitle)
   vFrame.GetXaxis().SetTitleSize(0.06)
@@ -290,10 +309,18 @@ for signal in signals:
   if options.fitGenMass: canvname = "GenSoftdropMass"
   canv.Print(canvname+"_CEN.pdf")
   
+  fxmin = 40.
+  fxmax = 120.
+  fymin = 0.000005
+  fymax = setmax
+  if options.doMassShiftFit:
+      fxmin = -1.
+      fxmax =1.
+  
   canv = getCanvas()
   canv.cd()
   setmax = histosFOR[0].GetMaximum()*2.0
-  vFrame = canv.DrawFrame(40.,0.000005,120.,setmax)  
+  vFrame = canv.DrawFrame(fxmin,fymin,fxmax,fymax)  
   vFrame.SetXTitle("PUPPI softdrop mass")
   vFrame.SetYTitle(yTitle)
   vFrame.GetXaxis().SetTitleSize(0.06)
@@ -308,6 +335,7 @@ for signal in signals:
   l1.Draw("same")
   li.Draw("same")
   canv.Print(canvname+"_FOR.pdf")
+  time.sleep(10)
   del canv
   
   
@@ -349,9 +377,13 @@ for signal in signals:
  #    p11_1.SetFrameFillStyle(0)
  #    p11_1.SetFrameBorderMode(0)
   vFrame = canv.DrawFrame(200,65.,2200,85.)
+  if signal.find("WprimeWZ")!=-1:
+      vFrame = canv.DrawFrame(200,75.,2200,95.)
   vFrame.SetYTitle("<m>_{m_{reco}} (GeV)")
   if options.fitGenMass:
     vFrame = canv.DrawFrame(200,70.,2200,90.)
+    if signal.find("WprimeWZ")!=-1:
+      vFrame = canv.DrawFrame(200,75.,2200,95.)
     vFrame.SetYTitle("<m>_{m_{gen}} (GeV)")
   if options.doMassShiftFit:
     vFrame = canv.DrawFrame(200,-0.3,2200,0.1)
@@ -372,7 +404,7 @@ for signal in signals:
   gFOR.SetMarkerStyle(20)
   gCEN.SetMarkerColor(col.GetColor(palette[0]))
   gFOR.SetMarkerColor(col.GetColor(palette[1]))
-  filetmp = TFile.Open("/mnt/t3nfs01/data01/shome/thaarres/EXOVVAnalysisRunII/AnalysisOutput/76X/ExoDiBosonAnalysis.BulkWW_13TeV_2000GeV.VV.root","READ")
+  filetmp = TFile.Open(prefix+"/ExoDiBosonAnalysis.BulkWW_13TeV_2000GeV.VV.root","READ")
   histtmpCEN = TProfile(filetmp.Get("gen_chsJEC_eta1v3"))
   histtmpFOR = TProfile(filetmp.Get("gen_chsJEC_etaUP1v3"))
   histtmpCEN.SetMarkerSize(1.6)
@@ -547,5 +579,5 @@ for signal in signals:
     gC_forCorr.Write()
     gF_forCorr.Write()
     f.Close()
-  time.sleep(105)
+  time.sleep(15)
   del canv
