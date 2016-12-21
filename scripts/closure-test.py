@@ -25,7 +25,8 @@ parser.add_option('--fitGen', action='store_true', dest='fitGenMass', default=Fa
 
 if options.noX: gROOT.SetBatch(True)
 
-prefix = '/mnt/t3nfs01/data01/shome/thaarres/EXOVVAnalysisRunII/AnalysisOutput/80X/'
+#prefix = '/mnt/t3nfs01/data01/shome/thaarres/EXOVVAnalysisRunII/AnalysisOutput/80X/'
+prefix = '/mnt/t3nfs01/data01/shome/dschafer/AnalysisOutput/80X/SignalMC/Summer16/'
 gStyle.SetOptFit(1)
 
 def get_line(xmin,xmax,ymin,ymax,style):
@@ -61,17 +62,24 @@ palette = get_palette('gv')
 col = TColor()
 
 masses = [1000,1200,1400,1600,1800,2000,2500,3000,4000,4500]  
-masses = [600,800,1000,1200,1400,1800,2500,3000,4000,4500] #Ops!! 400 masspoint is named for convenience and is actually SM WW, not signal sample!
+masses = [600,1000,1200,1400,1800,2000,3000,3500,4000,4500] #Zprime #Ops!! 400 masspoint is named for convenience and is actually SM WW, not signal sample!
+masses = [600,1000,1200,2000,2500,3000] #BulkGrav
+#masses = [600,800,1800,2000,2500,3500,4500] #Wprime
 
 hCentral = 'gen_SoftdropMass_eta1v3_NEWCORR'
 hForward = 'gen_SoftdropMass_etaUP1v3_NEWCORR'
+
+if options.fitGenMass:
+    hCentral = 'GenAK8SoftdropMass_eta1v3_CORR'
+    hForward = 'GenAK8SoftdropMass_etaUP1v3_CORR'
 
 lineStyle = [1,1,1,1,3,3,3,3]
 
 
 signals = ["BulkWW","BulkZZ","ZprimeWW","WprimeWZ"]
 signals = ["BulkWW"]
-
+#signals = ["WprimeWZ"]
+ptsCEN = []
 
 for signal in signals:
  
@@ -294,6 +302,8 @@ for signal in signals:
   p11_1.SetFrameFillStyle(0)
   p11_1.SetFrameBorderMode(0)
   vFrame = canv.DrawFrame(200,75.,2200,85.)
+  if signal.find("WprimeWZ")!=-1:
+      vFrame = canv.DrawFrame(200,85.,2200,95.)
   vFrame.SetYTitle("<m>_{m_{reco}} (GeV)")
   vFrame.SetXTitle("p_{T} (GeV)")
   vFrame.GetXaxis().SetTitleSize(0.08)
@@ -352,7 +362,7 @@ for signal in signals:
   canv.Update()
   canv.cd(2)
   
-  filetmp = TFile.Open("/mnt/t3nfs01/data01/shome/thaarres/EXOVVAnalysisRunII/PuppiSoftdropMassCorr_76X/PuppiSoftdropMassCorr/weights/puppiCorr.root","READ")
+  filetmp = TFile.Open("/mnt/t3nfs01/data01/shome/dschafer/PuppiSoftdropMassCorr/weights/puppiCorr.root","READ")
   histtmpCEN = TF1(filetmp.Get("puppiJECcorr_reco_0eta1v3"))
   histtmpFOR = TF1(filetmp.Get("puppiJECcorr_reco_1v3eta2v5"))
   histtmpGEN = TF1(filetmp.Get("puppiJECcorr_gen"))
@@ -367,7 +377,7 @@ for signal in signals:
   # p11_2.SetGridx()
   # p11_2.SetGridy()
   vFrame2 = p11_2.DrawFrame(p11_1.GetUxmin(),0.92, p11_1.GetUxmax(), 1.43)
-  vFrame2.SetXTitle("p_{T} (GeV)")
+  vFrame2.SetXTitle("<p_{T}> (GeV)")
   vFrame2.SetYTitle("Weight")
   vFrame2.GetXaxis().SetTitleSize(0.09)
   vFrame2.GetYaxis().SetTitleSize(0.15)
@@ -409,5 +419,46 @@ for signal in signals:
   canv.SaveAs(canvname,"pdf")
   canv.SaveAs(canvname.replace("pdf","root"),"pdf")
   
+  #============ plot generated puppi+softdrop mass with correction ===============================
+  
+  yTitle = "Arbitrary scale"
+   
+  canv4 = getCanvas()
+  canv4.cd()
+  
+  
+  histosGenCorr   =[]
+  
+  for filetmp in filelist:
+      histosGenCorr.append(filetmp.Get("GenAK8SoftdropMass_CORR"))
+  
+  setmax = histosGenCorr[0].GetMaximum()*2.0
+  vFrame = canv4.DrawFrame(40.,0.000005,120.,setmax)  
+  vFrame.SetXTitle("PUPPI softdrop mass")
+  vFrame.SetYTitle(yTitle)
+  vFrame.GetXaxis().SetTitleSize(0.06)
+  vFrame.GetXaxis().SetTitleOffset(0.95)
+  vFrame.GetXaxis().SetLabelSize(0.05)
+  vFrame.GetYaxis().SetTitleSize(0.06)
+  #vFrame.GetYaxis().SetTitleOffset(1.0)
+  vFrame.GetYaxis().SetLabelSize(0.05)
+  vFrame.GetXaxis().SetNdivisions(408)
+  vFrame.GetYaxis().SetNdivisions(404)
+  j=0
+  for h in histosGenCorr:
+      h.Draw("HISTsame")
+      #h.Scale(1./h.Integral())
+      h.SetLineColor(col.GetColor(palette[j]))
+      h.SetLineWidth(2)
+      j+=1
+  l1.Draw("same")
+  li = get_line(80.4,80.4,0.,0.13,1)
+  li.Draw("same")
+  canv4.Print("Closure_puppiSoftdropgenCorr.pdf")
+  
+  
+  
+  
+  
     
-  time.sleep(705)
+  time.sleep(10)

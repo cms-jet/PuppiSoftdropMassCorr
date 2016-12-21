@@ -217,6 +217,6 @@ if options.calculateRecoJEC: postfix = "reco"
 canvname = "JMC_fit_%s.pdf"%(postfix)
 canv.SaveAs(canvname,"pdf")
 canv.SaveAs(canvname.replace("pdf","root"),"pdf")
-time.sleep(205)
+time.sleep(20)
 
 
