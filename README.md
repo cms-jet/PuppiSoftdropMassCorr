@@ -1,6 +1,6 @@
 # PUPPI Softdrop Mass Corrections
 
-__THIS IS THE BRANCH FOR 102X__
+__THIS IS THE BRANCH FOR 102X (NOT YET APPROVED! CONTACT JMAR BEFORE USE!)__
 
 ## Introduction
 
